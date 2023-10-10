@@ -1,3 +1,6 @@
+jwt:
+  lifetime: 30m
+
 spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_LINK:localhost:5432}/postgres
@@ -5,7 +8,7 @@ spring:
     username: postgres
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
