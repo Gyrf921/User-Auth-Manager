@@ -1,7 +1,7 @@
 package com.userauthmanager.backend.mapper;
 
 import com.userauthmanager.backend.model.User;
-import com.userauthmanager.backend.web.dto.RegistrationUserDTO;
+import com.userauthmanager.backend.web.dto.request.RegistrationUserDTO;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 

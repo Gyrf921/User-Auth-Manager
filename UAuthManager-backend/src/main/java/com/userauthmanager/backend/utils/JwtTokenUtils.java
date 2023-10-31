@@ -1,25 +1,16 @@
 package com.userauthmanager.backend.utils;
 
-import com.userauthmanager.backend.exception.global.ErrorDetails;
-import com.userauthmanager.backend.web.dto.JwtRequestDTO;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +39,7 @@ public class JwtTokenUtils {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         clains.put("roles", rolesList);
-        //clains.put("email", user.email); //любая инфа для токина
+        clains.put("email", userDetails.getUsername()); //users email
 
         Date issuedDate = new Date();
         Date expiredDate = new Date(issuedDate.getTime() + jwtLifetime.toMillis());
@@ -64,10 +55,12 @@ public class JwtTokenUtils {
     }
 
     public String getUsername(String jwt) {
+        log.info("[getUsername] >> some email");
         return getAllClaimsFromToken(jwt).getSubject();
     }
 
     public List<String> getRoles(String jwt) {
+        log.info("[getRoles] >> some roles");
         List<?> list = getAllClaimsFromToken(jwt).get("roles", List.class);
 
         List<String> totalList = new ArrayList<>();

@@ -1,4 +1,4 @@
-package com.userauthmanager.backend.web.dto;
+package com.userauthmanager.backend.web.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JwtRequestDTO {
-
-    private String userName;
-
-    private String password;
+public class JwtResponseDTO {
+    private String token;
 }

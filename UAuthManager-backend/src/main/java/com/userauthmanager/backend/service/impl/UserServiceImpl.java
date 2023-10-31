@@ -1,6 +1,5 @@
 package com.userauthmanager.backend.service.impl;
 
-import com.userauthmanager.backend.exception.BadLoginOrPasswordException;
 import com.userauthmanager.backend.exception.UserAlreadyExistException;
 import com.userauthmanager.backend.mapper.UserMapper;
 import com.userauthmanager.backend.model.User;
@@ -8,19 +7,14 @@ import com.userauthmanager.backend.repository.UserRepository;
 import com.userauthmanager.backend.service.RoleService;
 import com.userauthmanager.backend.service.UserService;
 import com.userauthmanager.backend.utils.JwtTokenUtils;
-import com.userauthmanager.backend.web.dto.JwtRequestDTO;
-import com.userauthmanager.backend.web.dto.RegistrationUserDTO;
+import com.userauthmanager.backend.web.dto.request.RegistrationUserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,43 +37,28 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public User getUserByName(String name) {
+    public User getUserByEmail(String email) {
+        log.info("[getUserByEmail] >> email: {}", email);
 
-        log.info("[getUserByName] >> name: {}", name);
-
-        User user = userRepository.findByUserName(name)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.error("User not found by this name :{} ", name);
-                    return new UsernameNotFoundException("User not found by this name :: " + name);
+                    log.error("User not found by this email :{} ", email);
+                    return new UsernameNotFoundException("User not found by this email :: " + email);
                 });
 
-        log.info("[getUserByName] << result: {}", user.getUserName());
+        log.info("[getUserByEmail] << result: {}", user.getUserName());
 
         return user;
     }
-
-/*    @Override
-
-    public void checkToUserByAuthenticationManager(JwtRequestDTO jwtRequest) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(jwtRequest.getUserName(), jwtRequest.getPassword()));
-        } catch (BadCredentialsException badCredentialsException) {
-            log.error(badCredentialsException.getMessage());
-            throw badCredentialsException;
-        }
-    }
-*/
 
     @Override
     @Transactional
     public String createUser(RegistrationUserDTO registrationUserDTO) {
         log.info("[createUser] >> name: {}", registrationUserDTO.getUserName());
 
-        isPasswordsMatch(registrationUserDTO);
-
-        if (userRepository.findByUserName(registrationUserDTO.getUserName()).isPresent()) {
-            log.error("Пользователь с таким именем уже существует : {}", registrationUserDTO.getUserName());
-            throw new UserAlreadyExistException("Пользователь с таким именем уже существует :" + registrationUserDTO.getUserName());
+        if (userRepository.findByEmail(registrationUserDTO.getUserName()).isPresent()) {
+            log.error("User with this name already exist : {}", registrationUserDTO.getUserName());
+            throw new UserAlreadyExistException("User with this name already exist :" + registrationUserDTO.getUserName());
         }
 
         User user = userMapper.registrationUserDTOToUser(registrationUserDTO);
@@ -88,17 +67,17 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
         User savedUser = userRepository.save(user);
 
-        log.info("[createUser] << result is token for user");
+        log.info("[createUser] << result is token for user, savedUser name is : {}", savedUser.getUserName());
 
-        return setUserToSecurityAndCreateToken(savedUser.getUserName());
+        return createTokenForUser(savedUser.getEmail());
     }
 
-    @Transactional
     @Override
-    public String setUserToSecurityAndCreateToken(String name){
-        log.info("[setUserToSecurityAndCreateToken] >> create token for name: {}", name);
+    @Transactional
+    public String createTokenForUser(String email){
+        log.info("[setUserToSecurityAndCreateToken] >> create token for email: {}", email);
 
-        UserDetails userDetails = loadUserByUsername(name);
+        UserDetails userDetails = loadUserByUsername(email);
 
         log.info("[setUserToSecurityAndCreateToken] << result is token");
 
@@ -116,10 +95,10 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
     @Override
-    public void deleteUser(String userName) {
-        log.info("[deleteUser] >> name: {}", userName);
+    public void deleteUser(String userEmail) {
+        log.info("[deleteUser] >> userEmail: {}", userEmail);
 
-        userRepository.delete(getUserByName(userName));
+        userRepository.delete(getUserByEmail(userEmail));
 
         log.info("[deleteUser] << result: user has been deleted");
     }
@@ -136,22 +115,13 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
     @Override
-    public Boolean isPasswordsMatch(RegistrationUserDTO registrationUserDTO) {
-        if (!registrationUserDTO.getPassword().equals(registrationUserDTO.getConfirmPassword())) {
-            log.error("Пароли не совпадают:");
-            throw new BadLoginOrPasswordException("Пароли не совпадают");
-        }
-        return true;
-    }
-
-    @Override
     @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = getUserByName(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = getUserByEmail(email); // set email because email is unique
 
-        //Даём имя, пароль и мапим роль в спринговую
+        //We give the name, password and map the role to the spring
         return new org.springframework.security.core.userdetails.User(
-                user.getUserName(),
+                user.getEmail(),
                 user.getPassword(),
                 user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList()));
     }

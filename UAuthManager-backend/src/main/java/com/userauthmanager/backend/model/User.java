@@ -14,7 +14,7 @@ import java.util.Collection;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "users")
+@Table(name = "users_ama")
 public class User {
 
     @Id
@@ -34,7 +34,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "user_role",
+            name = "user_role_ama",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )

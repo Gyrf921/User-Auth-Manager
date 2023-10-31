@@ -1,8 +1,7 @@
 package com.userauthmanager.backend.service;
 
 import com.userauthmanager.backend.model.User;
-import com.userauthmanager.backend.web.dto.JwtRequestDTO;
-import com.userauthmanager.backend.web.dto.RegistrationUserDTO;
+import com.userauthmanager.backend.web.dto.request.RegistrationUserDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -11,17 +10,10 @@ public interface UserService {
 
     /**
      * Selected user from database by name
-     * @param name user for find
+     * @param email user for find
      * @return user from database
      */
-    User getUserByName(String name);
-
-/*    *//**
-     * Checks if such a user exists
-     * @param jwtRequest name and password for checking
-     *//*
-    void checkToUserByAuthenticationManager(JwtRequestDTO jwtRequest);*/
-
+    User getUserByEmail(String email);
 
     /**
      * Registration user and save him in database
@@ -30,8 +22,8 @@ public interface UserService {
      */
     String createUser(RegistrationUserDTO registrationUserDTO);
 
-    @Transactional
-    String setUserToSecurityAndCreateToken(String name);
+
+    String createTokenForUser(String email);
 
     /**
      * NOT IMPLEMENTED | Check sesCode to correct
@@ -59,11 +51,5 @@ public interface UserService {
      */
     List<User> getAllUser();
 
-    /**
-     * Checking correct password
-     * @param registrationUserDTO - 2 password for checking
-     * @return true - password is corrected | exception - password is uncorrected
-     */
-    Boolean isPasswordsMatch(RegistrationUserDTO registrationUserDTO);
 
 }
